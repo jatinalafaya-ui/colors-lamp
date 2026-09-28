@@ -1,17 +1,17 @@
 # COLORS (LAMP Stack)
 
-COLORS is a small web app built in the COP 4331C LAMP lab. A user logs in, then can search the colors saved under their account and add new ones. Each user only sees their own colors.
+The small web-app we created in the COP 4331C LAMP lab is called COLORS. Once logged in, a user may be able to view the colors which they have saved in their profile and can add new colors to their profile. Each user will only see their own colors.
 
-It's intentionally simple. The point of the app is to show every layer of a LAMP stack working together: HTML/CSS/JS in the browser, PHP endpoints that take and return JSON, and a MySQL database behind them, all on one Linux server running Apache.
+It's intentionally simple. The idea behind the app is that it should demonstrate each layer of a LAMP stack, HTML/CSS/JS in the browser, PHP endpoints that communicate with JSON in and out, and MySQL storing the data behind all of those.The concept behind the app is that it should show all these layers of the LAMP stack on one and the same Linux server running Apache, with PHP endpoints that accept/return JSON, and a MySQL database beneath it.
 
 ## Technologies used
 
-- **Linux** (Ubuntu droplet on DigitalOcean, from the LAMP marketplace image)
-- **Apache** as the web server
-- **MySQL** for the `Users` and `Colors` tables
-- **PHP** (mysqli with prepared statements) for the API
-- **HTML, CSS, and vanilla JavaScript** on the front end, using `XMLHttpRequest` to call the API
-- [JavaScript-MD5](https://github.com/blueimp/JavaScript-MD5) (MIT) in `public/js/md5.js`
+Download the LAMP marketplace image (Ubuntu droplet on DigitalOcean).
+Using the Apache web server
+MySQL for the Users table and the Colors table
+For PHP, use mysqli with prepared statements.
+On the front end, it's HTML, CSS, and vanilla JavaScript, with `XMLHttpRequest` calling the API.
+[JavaScript-MD5](https://github.com/blueimp/JavaScript-MD5) (MIT) — located in public/js/md5.js.
 
 ## Repository layout
 
@@ -38,15 +38,15 @@ colors-lamp/
 
 ## How it works
 
-1. `index.html` sends the login and password to `Login.php`. If a matching user exists, the API returns their id and name.
-2. `code.js` saves the user's id and name in a cookie that expires after 20 minutes, then redirects to `color.html`.
-3. `color.html` reads the cookie on load. If there's no valid user id it sends you back to the login page.
-4. Search and Add send the user id along with the request, so the API only reads or writes that user's rows.
-5. Log Out clears the cookie and returns to `index.html`.
+When user clicks on login, it sends the user to Login.php, which contains user's login name and password. When there is a matching user, the id and name of that user are returned.
+2. `code.js` places the user's id and name in a cookie that has a 20 minute expiration set and redirects to `color.html`.
+3. On loading, 3 loads a cookie into a file called color.html. If there's no valid user id it sends you back to the login page.
+Search and Add use the user id as part of the request and therefore it only reads or writes a user's rows.
+5. Log Out will remove the cookie and go back to the index.html.
 
 ## Setup
 
-You need a Linux server with Apache, PHP (with the mysqli extension), and MySQL. The DigitalOcean LAMP droplet has all three preinstalled, which is what the lab used. Any Ubuntu machine with `apache2`, `php`, `php-mysql`, and `mysql-server` installed works the same way.
+You need a Linux server with the Apache, PHP and MySQL software installed, along with the "mysqli" extension for PHP. The lab utilised the DigitalOcean LAMP droplet that already has the three preinstalled. The same is true about any Ubuntu machine that has apache2, php, php-mysql and mysql-server installed.
 
 ### 1. Create the database
 
@@ -71,11 +71,11 @@ INSERT INTO Users (FirstName, LastName, Login, Password) VALUES ('Test', 'User',
 INSERT INTO Colors (Name, UserID) VALUES ('Blue', 1), ('Light Blue', 1), ('Red', 1);
 ```
 
-The `UserID` in `Colors` has to match the `ID` of the user row you just created (it's `1` on a fresh table).
+The `UserID` in the `Colors` table will need to match the newly added user row's ID (which is '1' on a new table).
 
 ### 2. Deploy the files
 
-The front end expects the API to live in a folder called `LAMPAPI` next to the HTML pages. From the repo root on the server:
+The front end assumes that the API resides in an LAMPAPI folder with the HTML pages. On the server from the repo root:
 
 ```bash
 sudo cp -r public/* /var/www/html/
@@ -83,11 +83,11 @@ sudo mkdir -p /var/www/html/LAMPAPI
 sudo cp api/*.php /var/www/html/LAMPAPI/
 ```
 
-You can also upload the same files with FileZilla or PSFTP. Keep the names and capitalization exactly as they are, since Linux paths are case sensitive.
+Other options: You can use FileZilla or PSFTP to upload the same files. Note that the names and capitalization are important as they are used in the Linux path and case is important.
 
-### 3. Configure the database connection
+### 3. Set up and connect to the database
 
-The real credentials are not in this repo. On the server, copy the template and fill in the MySQL user from step 1:
+This repo does not contain the "real" credentials. On the server, copy the template and fill in the MySQL user you created in step 1:
 
 ```bash
 cd /var/www/html/LAMPAPI
@@ -95,13 +95,13 @@ sudo cp config.example.php config.php
 sudo nano config.php
 ```
 
-`config.php` is in `.gitignore`, so it won't be committed if you work out of a clone.
+If you are developing a clone, it includes a .gitignore file and won't commit `config.php`.
 
-## Running and accessing the app
+The app provides access to game options.The app offers access to game options.
 
-Apache is already serving `/var/www/html`, so there's nothing extra to start. Open `http://<your-domain-or-server-ip>/` in a browser, log in with the user you inserted, and try searching for part of a color name (for example `blue`) or adding a new one.
+There's no additional file to start since Apache already serves up /var/www/html. Access a Web browser to open http://`<your-domain-or-server-ip>/` in a browser and use part of a color name (e.g., blue) or a new color name for a search, logging in with the user you inserted.
 
-To test the API directly, send a `POST` with a JSON body and `Content-Type: application/json` (Postman, ARC, or curl all work):
+You should test the API directly by sending a post, with a body of the form of json, and Content-Type application/json, all of which are supported and can be done in Postman, ARC and CURL (all are examples):
 
 ```bash
 curl -X POST http://<your-domain>/LAMPAPI/Login.php \
@@ -115,17 +115,18 @@ curl -X POST http://<your-domain>/LAMPAPI/Login.php \
 | `LAMPAPI/SearchColors.php` | `{"search", "userId"}` | `{"results":["Blue","Light Blue"],"error":""}` | `{"results":[],"error":"No Records Found"}` |
 | `LAMPAPI/AddColor.php` | `{"color", "userId"}` | `{"error":""}` | `{"error":"<MySQL error>"}` if the connection fails |
 
-Every endpoint returns HTTP 200. Check the `error` field (or `id` of 0 for login) to tell whether the call worked.
+
+All end points return 200. Use the `error` field (or `id` equal to 0 for login) to indicate whether the call was successful or not.
 
 ## Assumptions and limitations
 
-- This is a lab demo, not a production app. It runs over plain HTTP, so the login and password are sent unencrypted. A real deployment should put it behind HTTPS (Let's Encrypt/certbot works on the droplet).
-- Passwords are stored and compared as plain text. The lab also showed storing MD5 hashes and hashing on the client with `md5.js`; that's still weaker than server-side hashing with `password_hash()` and would be the first thing to change.
-- The session is just a cookie holding the user id, and the API trusts whatever `userId` the browser sends. Anyone who edits the cookie or the request can read or add colors for another user. Server-side sessions would fix that.
-- `SearchColors` and `AddColor` don't validate input beyond what the prepared statements provide. Empty color names and duplicates are accepted.
-- API responses are built by string concatenation, so a color name containing a double quote would produce invalid JSON. Switching to `json_encode()` would fix it.
-- The front end assumes the API folder is named `LAMPAPI` and sits in the same web root as the pages.
-- The `Password` column is `VARCHAR(50)`, which fits plain text and 32-character MD5 hashes but not bcrypt hashes. It would need to grow if hashing moved server side.
+This is a Lab demo, not a production App. It is a plain HTTP based application, thus username and passwords are not encrypted during transfer. It should be deployed with HTTPS (Let's Encrypt/certbot is capable of it on the droplet).
+Plain text storage and comparison of passwords. Where they were showing storing MD5 hashes and hashing on the client with `md5.js` is still weaker than server-side hashing with the `password_hash()` function, so that would be the first thing to change.
+This session is simply a cookie containing the user id and the API assumes that what the browser returns is the user id. Readers can change or add colors to the cookie and to the request; anyone editing the request can do the same to the cookie as well. Server side sessions would take care of that.
+The input to `SearchColors` and `AddColor` is not validated beyond that which is specified in the prepared statements. Unrecognized colors and duplicates are allowed.
+API responses are constructed using string concatentation; therefore a colour name that includes an apostrophe will return a bad JSON. This could be corrected by changing to `json_encode()`.
+The front end is hardcoded to look for the API folder to be named LAMPAPI and to be located in the same web root as the web pages.
+The `Password` column is declared as `VARCHAR(50)`, it will contain plain text passwords and 32 character MD5 hashes, but not bcrypt hashes. It would have to expand if hashing was performed on the server.
 
 ## License
 
