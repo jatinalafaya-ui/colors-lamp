@@ -1,0 +1,83 @@
+@startuml activity
+title COLORS Web Application - Activity Diagram (log in, search and add colors, log out)
+skinparam shadowing false
+
+|User|
+start
+:Open index.html;
+repeat
+  :Enter username and password;
+  :Click "Do It";
+  |Browser (code.js)|
+  :doLogin() builds JSON {login, password};
+  :POST LAMPAPI/Login.php;
+  |PHP API (LAMPAPI)|
+  :Decode the JSON request;
+  |MySQL|
+  :SELECT ID, firstName, lastName FROM Users
+  WHERE Login = ? AND Password = ?;
+  |PHP API (LAMPAPI)|
+  if (matching row?) then ([yes])
+    :Return {id, firstName, lastName, error: ""};
+  else ([no])
+    :Return {id: 0, error: "No Records Found"};
+  endif
+  |Browser (code.js)|
+  :Parse the JSON response;
+  backward:Show "User/Password combination incorrect";
+repeat while (id < 1?) is ([yes]) not ([no])
+
+:saveCookie() stores firstName, lastName, userId
+(expires in 20 minutes);
+:Redirect to color.html;
+:readCookie() on page load;
+if (userId found in cookie?) then ([no])
+  :Redirect to index.html;
+  stop
+else ([yes])
+  :Show "Logged in as <first> <last>";
+endif
+
+repeat
+  |User|
+  if (action?) then ([search])
+    :Type search text and click "Search Color";
+    |Browser (code.js)|
+    :searchColor() POSTs to LAMPAPI/SearchColors.php\nwith {search, userId};
+    |PHP API (LAMPAPI)|
+    :Decode the JSON request;
+    |MySQL|
+    :SELECT Name FROM Colors
+    WHERE Name LIKE %search% AND UserID = ?;
+    |PHP API (LAMPAPI)|
+    if (any rows?) then ([yes])
+      :Return {results: [names], error: ""};
+    else ([no])
+      :Return {results: [], error: "No Records Found"};
+    endif
+    |Browser (code.js)|
+    :Show "Color(s) has been retrieved"
+    and list the results;
+  else ([add])
+    |User|
+    :Type a color name and click "Add Color";
+    |Browser (code.js)|
+    :addColor() POSTs to LAMPAPI/AddColor.php\nwith {color, userId};
+    |PHP API (LAMPAPI)|
+    :Decode the JSON request;
+    |MySQL|
+    :INSERT INTO Colors (UserId, Name);
+    |PHP API (LAMPAPI)|
+    :Return {error: ""};
+    |Browser (code.js)|
+    :Show "Color has been added";
+  endif
+  |User|
+repeat while (keep working?) is ([yes]) not ([no])
+
+:Click "Log Out";
+|Browser (code.js)|
+:doLogout() expires the session cookie;
+:Redirect to index.html;
+stop
+@enduml
