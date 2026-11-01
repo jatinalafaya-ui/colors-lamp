@@ -1,0 +1,38 @@
+@startuml usecase
+title COLORS Web Application - Use Case Diagram
+left to right direction
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+actor User
+
+rectangle "COLORS Web Application" {
+  usecase "Log In\n--\nextension points:\ncredentials rejected" as LogIn
+  usecase "Show Login Error" as LoginError
+  usecase "Search Colors" as Search
+  usecase "Add Color" as Add
+  usecase "Verify Session" as Verify
+  usecase "Log Out" as LogOut
+}
+
+User -- LogIn
+User -- Search
+User -- Add
+User -- LogOut
+
+Search ..> Verify : <<include>>
+Add ..> Verify : <<include>>
+LoginError ..> LogIn : <<extend>>
+
+note right of Verify
+  color.html reads the session cookie on load.
+  No cookie (or an expired one) sends the user
+  back to index.html. Search and Add both send
+  the userId stored in that cookie.
+end note
+
+note bottom of User
+  There is no sign-up page. Accounts are
+  added directly to the Users table in MySQL.
+end note
+@enduml
