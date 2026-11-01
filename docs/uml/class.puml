@@ -1,0 +1,128 @@
+@startuml class
+title COLORS Web Application - Class Diagram
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam nodesep 60
+skinparam ranksep 70
+
+package "Client (public/)" {
+  class "index.html" as IndexPage <<page>> {
+    +loginName : text input
+    +loginPassword : password input
+    +loginResult : span
+  }
+
+  class "color.html" as ColorPage <<page>> {
+    +userName : span
+    +searchText : text input
+    +colorSearchResult : span
+    +colorList : p
+    +colorText : text input
+    +colorAddResult : span
+  }
+
+  class "code.js" as CodeJs <<script>> {
+    +urlBase : String = "LAMPAPI" {readOnly}
+    +extension : String = "php" {readOnly}
+    +userId : int = 0
+    +firstName : String = ""
+    +lastName : String = ""
+    +doLogin() : void
+    +saveCookie() : void
+    +readCookie() : void
+    +doLogout() : void
+    +addColor() : void
+    +searchColor() : void
+  }
+
+  class "md5.js" as Md5 <<library>> {
+    +md5(string : String, key : String, raw : boolean) : String
+  }
+}
+
+package "Server API (api/, served as LAMPAPI/)" {
+  class "Login.php" as Login <<endpoint>> {
+    +getRequestInfo() : array
+    +sendResultInfoAsJson(obj : String) : void
+    +returnWithError(err : String) : void
+    +returnWithInfo(firstName : String, lastName : String, id : int) : void
+  }
+
+  class "AddColor.php" as AddColor <<endpoint>> {
+    +getRequestInfo() : array
+    +sendResultInfoAsJson(obj : String) : void
+    +returnWithError(err : String) : void
+  }
+
+  class "SearchColors.php" as SearchColors <<endpoint>> {
+    +getRequestInfo() : array
+    +sendResultInfoAsJson(obj : String) : void
+    +returnWithError(err : String) : void
+    +returnWithInfo(searchResults : String) : void
+  }
+
+  class "config.php" as Config <<config>> {
+    +DB_HOST : String {readOnly}
+    +DB_USER : String {readOnly}
+    +DB_PASS : String {readOnly}
+    +DB_NAME : String {readOnly}
+  }
+}
+
+package "Database (MySQL, COP4331)" {
+  class User <<table: Users>> {
+    -ID : INT {PK}
+    {field} -FirstName : VARCHAR(50)
+    {field} -LastName : VARCHAR(50)
+    {field} -Login : VARCHAR(50)
+    {field} -Password : VARCHAR(50)
+  }
+
+  class Color <<table: Colors>> {
+    -ID : INT {PK}
+    {field} -Name : VARCHAR(50)
+    -UserID : INT
+  }
+}
+
+User "owner 1" -- "colors 0..*" Color : owns >
+
+IndexPage ..> CodeJs : <<loads>>
+IndexPage ..> Md5 : <<loads>>
+ColorPage ..> CodeJs : <<loads>>
+
+CodeJs ..> Login : POST {login, password}
+CodeJs ..> AddColor : POST {color, userId}
+CodeJs ..> SearchColors : POST {search, userId}
+
+Login ..> Config : <<require>>
+AddColor ..> Config : <<require>>
+SearchColors ..> Config : <<require>>
+
+Login ..> User : <<select>>
+AddColor ..> Color : <<insert>>
+SearchColors ..> Color : <<select>>
+
+note top of CodeJs
+  COLORS is procedural PHP and JavaScript, so each
+  script is modeled as a class: its top-level variables
+  are attributes and its functions are operations.
+end note
+
+note bottom of Color
+  UserID ties each color to its owner,
+  but schema.sql does not declare it
+  as a FOREIGN KEY.
+end note
+
+note bottom of Md5
+  Loaded by index.html, but doLogin()
+  never calls md5(), so the password
+  is sent as typed.
+end note
+
+note right of SearchColors
+  getRequestInfo() and sendResultInfoAsJson()
+  are copied into all three endpoints.
+end note
+@enduml
