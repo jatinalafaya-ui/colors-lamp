@@ -15,3 +15,8 @@ desktop.ini
 # Logs and local env files
 *.log
 .env
+
+# Local lint tooling and caches
+node_modules/
+.eslintcache
+.stylelintcache
